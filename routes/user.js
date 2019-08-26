@@ -1,5 +1,6 @@
 import Router from 'express';
 import User from '../models/user';
+import "regenerator-runtime/runtime";
 const router = Router();
 
 router.get('/all', (req, res) => {
@@ -38,24 +39,19 @@ router.post('/login', (req, res) => {
 });
 
 router.post('/google-login', (req, res) => {
-    console.log(req.body.token)
     const CLIENT_ID = '946880795736-5ojeo39e17n91ggfena8unt59bfnc0l7.apps.googleusercontent.com';
     const { OAuth2Client } = require('google-auth-library');
     const client = new OAuth2Client(CLIENT_ID);
     async function verify() {
         const ticket = await client.verifyIdToken({
             idToken: req.body.token,
-            audience: CLIENT_ID,  // Specify the CLIENT_ID of the app that accesses the backend
-            // Or, if multiple clients access the backend:
-            //[CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]
+            audience: CLIENT_ID,
         });
-        console.log(ticket)
         const payload = ticket.getPayload();
-        console.log(payload)
-        const userid = payload['sub'];
-        console.log(userid)
-        // If request specified a G Suite domain:
-        //const domain = payload['hd'];
+        User.findOne({ email: payload.email }, (err, user) => {
+            if(user) res.send({ user: { email: user.email, firstName: user.firstName, lastName: user.lastName }, session: req.sessionID });
+            else res.send({ message: 'Google account not found' });
+        })
     }
     verify().catch(console.error);
 });
