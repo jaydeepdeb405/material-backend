@@ -1,5 +1,6 @@
 import Router from 'express';
 import User from '../models/user';
+import passport from 'passport';
 const router = Router();
 
 router.get('/all', (req, res) => {
@@ -23,29 +24,32 @@ router.post('/add', (req, res) => {
     });
 });
 
-router.post('/login', (req, res) => {
-    const email = req.body.email;
-    const password = req.body.password;
-    const errorMessage = 'Invalid username or password';
-    new Promise((resolve, reject) => {
-        if (!email || !password) resolve(errorMessage);
-        User.findOne({ email: email }, function (err, User) {
-            if (err) reject(err);
-            else if (User !== null) {
-                User.comparePassword(password, function (err, isMatch) {
-                    if (err) reject(err);
-                    isMatch ? resolve('Logged in') : resolve(errorMessage);
-                });
-            } else {
-                resolve(errorMessage);
-            }
-        })
-    }).then((message) => res.send({ 'message': message }))
-        .catch((err) => {
-            console.error(err);
-            res.sendStatus(500);
-        });
+router.post('/login', passport.authenticate('local', { failureFlash: true })
+, (req, res) => {
+    res.sendStatus(200);
 });
+    // const email = req.body.email;
+    // const password = req.body.password;
+    // const errorMessage = 'Invalid username or password';
+    // new Promise((resolve, reject) => {
+    //     if (!email || !password) resolve(errorMessage);
+    //     User.findOne({ email: email }, function (err, User) {
+    //         if (err) reject(err);
+    //         else if (User !== null) {
+    //             User.comparePassword(password, function (err, isMatch) {
+    //                 if (err) reject(err);
+    //                 isMatch ? resolve('Logged in') : resolve(errorMessage);
+    //             });
+    //         } else {
+    //             resolve(errorMessage);
+    //         }
+    //     })
+    // }).then((message) => res.send({ 'message': message }))
+    //     .catch((err) => {
+    //         console.error(err);
+    //         res.sendStatus(500);
+    //     });
+// });
 
 router.post('/google-login', (req, res) => {
     console.log(req.body.token)
