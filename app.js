@@ -3,10 +3,8 @@ import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
 import morgan from 'morgan';
 import cors from 'cors';
-import flash from 'connect-flash';
 import session from 'express-session';
 import userRoute from './routes/user';
-import passport from './config/passport';
 
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
@@ -15,22 +13,18 @@ if (process.env.NODE_ENV !== 'production') {
 const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(session({secret: 'secret', name: 'session_id', saveUninitialized: true, resave: false}));
-app.use(passport.initialize());
-app.use(passport.session());
+app.use(session({secret: 'secret', name: 'session_id', saveUninitialized: false, resave: true}));
 app.use(morgan('dev'));
-app.use(flash());
 app.use(cors(corsOptions));
-
-app.use('/api/user', userRoute);
-
-app.use((error, req, res, next) => {
-    if (error instanceof SyntaxError) {
+app.use((err, req, res, next) => {
+    if (err instanceof SyntaxError) {
         res.sendStatus(400);
     } else {
         next();
     }
 });
+
+app.use('/api/user', userRoute);
 
 mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true, useCreateIndex: true })
 .then(

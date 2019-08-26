@@ -24,11 +24,20 @@ UserSchema.pre('save', function(next) {
     });
 });
 
-UserSchema.methods.comparePassword = function(candidatePassword, cb) {
-    bcrypt.compare(candidatePassword, this.password, function(err, isMatch) {
-        if (err) return cb(err);
-        cb(null, isMatch);
+UserSchema.statics.authenticate = function(email, password, callback) {
+    User.findOne({ email: email }, function(err, user) {
+        const message = 'Invalid username or password';
+        if(err) callback(err);
+        else if(!user) return callback(null, message);
+        if(user) {
+            bcrypt.compare(password, user.password, function(err, isMatch) {
+                if(err) callback(err);
+                if(isMatch) callback(null, 'success', user);
+                else return callback(null, message);
+            });
+        }
     });
 };
 
-export default mongoose.model('user', UserSchema);
+const User = mongoose.model('user', UserSchema);
+export default User;
